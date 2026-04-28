@@ -1,6 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(python *)",
+      "Bash(pip install *)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "claude-flow"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
