@@ -156,7 +156,7 @@ alter table crisis_state   enable row level security;
 
 -- A small helper: current tenant
 create or replace function public.current_tenant()
-returns uuid language sql stable as $$
+returns uuid language sql stable security definer set search_path = public as $$
   select tenant_id from public.profiles where id = auth.uid()
 $$;
 
