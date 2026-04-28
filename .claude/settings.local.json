@@ -5,7 +5,10 @@
       "Bash(pip install *)",
       "Bash(npm install *)",
       "Bash(npx tsc *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(npm run *)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(rm -rf .next)"
     ]
   },
   "enableAllProjectMcpServers": true,

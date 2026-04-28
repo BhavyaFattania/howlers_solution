@@ -1,6 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const NGO_ROLES       = new Set(["coordinator", "admin", "field_worker"]);
+const VOLUNTEER_ROLES = new Set(["volunteer"]);
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -22,17 +25,37 @@ export async function updateSession(request: NextRequest) {
   );
 
   const { data } = await supabase.auth.getUser();
-  const path = request.nextUrl.pathname;
-  const isProtected =
-    path.startsWith("/coordinator") ||
-    path.startsWith("/volunteer") ||
-    path.startsWith("/admin");
+  const user = data.user;
+  // role is undefined if the user has no metadata — we only enforce when it is explicitly set
+  const role = (user?.user_metadata as { role?: string } | undefined)?.role;
 
-  if (isProtected && !data.user) {
+  const path = request.nextUrl.pathname;
+  const onCoordinator = path.startsWith("/coordinator");
+  const onVolunteer   = path.startsWith("/volunteer");
+  const isProtected   = onCoordinator || onVolunteer || path.startsWith("/admin");
+
+  // 1. Unauthenticated → redirect to login
+  if (isProtected && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);
     return NextResponse.redirect(url);
+  }
+
+  if (user && role) {
+    // 2. Known volunteer on coordinator routes → send to volunteer portal
+    if (onCoordinator && VOLUNTEER_ROLES.has(role)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/volunteer/feed";
+      return NextResponse.redirect(url);
+    }
+
+    // 3. Known NGO role on volunteer routes → send to coordinator console
+    if (onVolunteer && NGO_ROLES.has(role)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/coordinator/mission-control";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
