@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f8fafc;
+  --fg: #0f172a;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --muted: #64748b;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans, "Google Sans", Inter, system-ui, sans-serif);
+}
+
+/* Leaflet fix when used inside a flex container */
+.leaflet-container { height: 100%; width: 100%; z-index: 0; }
