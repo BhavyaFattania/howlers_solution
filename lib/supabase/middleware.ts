@@ -7,9 +7,19 @@ const VOLUNTEER_ROLES = new Set(["volunteer"]);
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // If env vars are missing (e.g. misconfigured deployment), don't crash the
+  // middleware — just pass the request through unauthenticated.
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn("[middleware] Supabase env vars missing — skipping auth check");
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
