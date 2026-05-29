@@ -3,11 +3,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Upload, FileText, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle, Input, Label, Textarea, Badge, Chip } from "@/components/ui/primitives";
 import type { ExtractedNeedDraft, Urgency } from "@/lib/types";
 
 export default function NewNeedPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState<ExtractedNeedDraft | null>(null);
@@ -87,29 +90,29 @@ export default function NewNeedPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-4 w-4" /> Paper survey → Need
+              <FileText className="h-4 w-4" /> {t("Paper survey → Need")}
             </CardTitle>
           </CardHeader>
           <CardBody className="space-y-3">
             <p className="text-sm text-slate-600">
-              Drop a scanned survey or photo. LlamaParse extracts text; Gemini converts it to a draft Need.
+              {t("Drop a scanned survey or photo. LlamaParse extracts text; Gemini converts it to a draft Need.")}
             </p>
             <label className="flex items-center justify-center h-32 rounded-lg border-2 border-dashed border-slate-300 cursor-pointer hover:bg-slate-50">
               <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleUpload} disabled={busy} />
               <div className="text-center text-sm text-slate-500">
                 <Upload className="h-5 w-5 mx-auto mb-1" />
-                {busy ? "Processing…" : "Click to upload"}
+                {busy ? t("Processing…") : t("Click to upload")}
               </div>
             </label>
             {markdown && (
               <details className="text-xs">
-                <summary className="cursor-pointer text-slate-500">Extracted markdown</summary>
+                <summary className="cursor-pointer text-slate-500">{t("Extracted markdown")}</summary>
                 <pre className="mt-2 p-2 bg-slate-50 rounded max-h-72 overflow-auto whitespace-pre-wrap">{markdown}</pre>
               </details>
             )}
             {draft && (
               <div className="text-xs flex items-center gap-1 text-emerald-700">
-                <Sparkles className="h-3 w-3" /> Draft pre-filled — review and edit
+                <Sparkles className="h-3 w-3" /> {t("Draft pre-filled — review and edit")}
               </div>
             )}
           </CardBody>
@@ -117,60 +120,62 @@ export default function NewNeedPage() {
       </div>
       <div className="lg:col-span-2">
         <Card>
-          <CardHeader><CardTitle>Need details</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t("Need details")}</CardTitle></CardHeader>
           <CardBody className="space-y-3">
             <div>
-              <Label>Title</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to be done?" />
+              <Label>{t("Title")}</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("What needs to be done?")} />
             </div>
             <div>
-              <Label>Description</Label>
+              <Label>{t("Description")}</Label>
               <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Category</Label>
+                <Label>{t("Category")}</Label>
                 <Input value={category} onChange={(e) => setCategory(e.target.value)} />
               </div>
               <div>
-                <Label>Urgency</Label>
+                <Label>{t("Urgency")}</Label>
                 <select
                   value={urgency}
                   onChange={(e) => setUrgency(e.target.value as Urgency)}
                   className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm"
                 >
                   {(["low", "medium", "high", "critical"] as Urgency[]).map((u) => (
-                    <option key={u}>{u}</option>
+                    <option key={u}>{t(u)}</option>
                   ))}
                 </select>
               </div>
             </div>
             <div>
-              <Label>Required skills (comma-separated)</Label>
+              <Label>{t("Required skills (comma-separated)")}</Label>
               <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="lifting, first_aid" />
             </div>
             <div>
-              <Label>Helpful languages</Label>
+              <Label>{t("Helpful languages")}</Label>
               <Input value={langs} onChange={(e) => setLangs(e.target.value)} placeholder="gu, hi, en" />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <Label>Lat</Label>
+                <Label>{t("Lat")}</Label>
                 <Input value={lat} onChange={(e) => setLat(e.target.value)} placeholder="23.045" />
               </div>
               <div>
-                <Label>Lng</Label>
+                <Label>{t("Lng")}</Label>
                 <Input value={lng} onChange={(e) => setLng(e.target.value)} placeholder="72.62" />
               </div>
               <div>
-                <Label>Headcount</Label>
+                <Label>{t("Headcount")}</Label>
                 <Input type="number" min={1} value={headcount} onChange={(e) => setHeadcount(parseInt(e.target.value) || 1)} />
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
-              <Button onClick={save} disabled={busy || !title}>
-                {busy ? "Saving…" : "Publish Need"}
+            <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2 w-full">
+              <Button variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
+                {t("Cancel")}
+              </Button>
+              <Button onClick={save} disabled={busy || !title} className="w-full sm:w-auto">
+                {busy ? t("Saving…") : t("Publish Need")}
               </Button>
             </div>
           </CardBody>

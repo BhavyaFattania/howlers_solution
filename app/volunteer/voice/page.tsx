@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle, Textarea, Badge } from "@/components/ui/primitives";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 
 interface Msg {
   role: "user" | "assistant";
@@ -12,8 +14,14 @@ interface Msg {
   themes?: string[];
 }
 
+const DUMMY_MSGS: Msg[] = [
+  { role: "user", text: "I felt like our team was very disorganized during the food distribution yesterday." },
+  { role: "assistant", text: "I'm sorry to hear that the distribution felt disorganized. Thank you for raising this. I've classified your feedback and sent it to your coordinator for review.", classification: "transactional", themes: ["logistics", "disorganization"] }
+];
+
 export default function VolunteerVoicePage() {
-  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const { t } = useTranslation();
+  const [msgs, setMsgs] = useState<Msg[]>(DUMMY_MSGS);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -48,17 +56,16 @@ export default function VolunteerVoicePage() {
     <div className="p-6 max-w-2xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Considerate Voice</CardTitle>
+          <CardTitle>{t("Considerate Voice")}</CardTitle>
           <p className="text-sm text-slate-500 mt-1">
-            Tell us how you feel — about a task, the team, the mission. Your concern goes
-            straight to your coordinator with full context.
+            {t("Tell us how you feel — about a task, the team, the mission. Your concern goes straight to your coordinator with full context.")}
           </p>
         </CardHeader>
         <CardBody className="space-y-3">
           <div className="space-y-2 max-h-[55vh] overflow-y-auto">
             {msgs.length === 0 ? (
               <div className="text-sm text-slate-400 py-8 text-center">
-                Try: "I felt the team didn't really listen at the cleanup yesterday."
+                {t('Try: "I felt the team didn\'t really listen at the cleanup yesterday."')}
               </div>
             ) : msgs.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -78,20 +85,22 @@ export default function VolunteerVoicePage() {
               </div>
             ))}
           </div>
-          <div className="flex gap-2 pt-2 border-t border-slate-100">
+          <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="What's on your mind?"
+              placeholder={t("What's on your mind?")}
               className="min-h-[64px]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); }
               }}
             />
-            <Button onClick={send} disabled={busy || !input.trim()}>
-              <Send className="h-4 w-4" />
-              {busy ? "Sending…" : "Send"}
-            </Button>
+            <div className="flex justify-end w-full">
+              <Button onClick={send} disabled={busy || !input.trim()} className="w-full sm:w-auto justify-center">
+                <Send className="h-4 w-4 mr-1.5" />
+                {busy ? t("Sending…") : t("Send")}
+              </Button>
+            </div>
           </div>
         </CardBody>
       </Card>

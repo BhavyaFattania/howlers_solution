@@ -7,7 +7,8 @@ const KEY = process.env.LLAMAPARSE_API_KEY;
 
 export async function parseDocument(file: Blob, filename = "upload"): Promise<string> {
   if (!KEY) {
-    return DEMO_MARKDOWN;
+    if (process.env.NODE_ENV === "development") return DEMO_MARKDOWN;
+    throw new Error("LlamaParse API Key is not configured.");
   }
 
   const fd = new FormData();

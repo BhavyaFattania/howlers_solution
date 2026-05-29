@@ -54,6 +54,7 @@ export async function POST(req: Request) {
   const { data, error } = await supa.from("needs").insert(insert).select("*").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  let syncWarning = false;
   // Index in Chroma
   try {
     await upsertNeed({
@@ -63,12 +64,13 @@ export async function POST(req: Request) {
         tenant_id: data.tenant_id,
         urgency: data.urgency,
         state: data.state,
-        geo_lat: data.geo_lat ?? 0,
-        geo_lng: data.geo_lng ?? 0,
+        ...(data.geo_lat != null && { geo_lat: data.geo_lat }),
+        ...(data.geo_lng != null && { geo_lng: data.geo_lng }),
       },
     });
   } catch (e) {
     console.error("chroma upsert failed", e);
+    syncWarning = true;
   }
 
   // Activity event
@@ -82,5 +84,5 @@ export async function POST(req: Request) {
     });
   } catch {}
 
-  return NextResponse.json({ need: data });
+  return NextResponse.json({ need: data, syncWarning });
 }

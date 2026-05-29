@@ -33,9 +33,11 @@ export async function POST(req: Request) {
   if (!u.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { active } = await req.json();
   const { data: profile } = await supa
-    .from("profiles").select("tenant_id").eq("id", u.user.id).single();
+    .from("profiles").select("tenant_id, role").eq("id", u.user.id).single();
   if (!profile?.tenant_id)
     return NextResponse.json({ error: "no tenant" }, { status: 400 });
+  if (!["coordinator", "admin"].includes(profile.role))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const admin = createAdmin();
   const row = {

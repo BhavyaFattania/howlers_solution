@@ -1,6 +1,11 @@
+"use client";
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Zap, Map, FileText, Sparkles, CheckCircle, Quote, Users, Shield } from "lucide-react";
+import { ArrowRight, Zap, Map, FileText, Sparkles, CheckCircle, Quote, Users, Shield, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 
 const STATS = [
   { v: "24+",    l: "NGOs onboarded" },
@@ -62,31 +67,69 @@ const BENEFITS = [
 ];
 
 export default function Landing() {
+  const { t } = useTranslation();
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navbar */}
       <header className="sticky top-0 z-50 glass border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 select-none">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand to-violet-600 text-white grid place-items-center font-bold text-sm shadow-sm">
-              S
-            </div>
-            <span className="font-semibold text-slate-900">SamaajSetu</span>
+            <img src="/samaajsetu.webp" alt="Logo" className="h-8 w-8 object-contain" />
+            <span className="font-semibold text-slate-900">{t("SamaajSetu")}</span>
           </Link>
-          <nav className="flex items-center gap-1">
+          
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-2">
             <Link href="/donor">
-              <Button variant="ghost" size="sm">Donor portal</Button>
+              <Button variant="ghost" size="sm">{t("Donor portal")}</Button>
             </Link>
             <Link href="/login">
-              <Button variant="outline" size="sm">Sign in</Button>
+              <Button variant="outline" size="sm">{t("Sign in")}</Button>
             </Link>
             <Link href="/signup">
               <Button size="sm" className="shadow-sm shadow-brand/20">
-                Get started <ArrowRight className="h-3.5 w-3.5" />
+                {t("Get started")} <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
+            <div className="ml-1 pl-1 border-l border-slate-200 flex items-center">
+              <LanguageSelector inline />
+            </div>
           </nav>
+
+          {/* Mobile Navigation Trigger */}
+          <div className="flex md:hidden items-center gap-2">
+            <LanguageSelector inline />
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-2 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors animate-pulse-slow"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {menuOpen && (
+          <div className="md:hidden border-b border-slate-200 bg-white px-4 py-4 space-y-3 shadow-lg absolute top-16 left-0 right-0 z-40 transition-all duration-300">
+            <Link href="/donor" onClick={() => setMenuOpen(false)} className="block w-full">
+              <Button variant="ghost" className="w-full justify-start text-slate-700 h-10">
+                {t("Donor portal")}
+              </Button>
+            </Link>
+            <Link href="/login" onClick={() => setMenuOpen(false)} className="block w-full">
+              <Button variant="outline" className="w-full justify-start h-10">
+                {t("Sign in")}
+              </Button>
+            </Link>
+            <Link href="/signup" onClick={() => setMenuOpen(false)} className="block w-full">
+              <Button className="w-full justify-start h-10 shadow-sm shadow-brand/20">
+                {t("Get started")} <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        )}
       </header>
 
       <main className="flex-1">
@@ -99,23 +142,20 @@ export default function Landing() {
               Powered by Gemini AI · ChromaDB · LlamaParse
             </div>
             <h1 className="animate-fade-in-up delay-100 max-w-3xl text-5xl md:text-6xl font-bold tracking-tight text-slate-900 leading-tight">
-              Connect community needs to{" "}
-              <span className="text-gradient">the right volunteers</span>{" "}
-              instantly.
+              {t("Connect community needs to the right volunteers instantly.")}
             </h1>
             <p className="animate-fade-in-up delay-200 mt-5 max-w-2xl text-lg text-slate-600 leading-relaxed">
-              SamaajSetu aggregates needs from paper surveys, field reports, voice memos and SMS
-              into one live picture — and uses AI matching to deploy volunteers where they matter most.
+              {t("SamaajSetu aggregates needs from paper surveys, field reports, voice memos and SMS into one live picture — and uses AI matching to deploy volunteers where they matter most.")}
             </p>
             <div className="animate-fade-in-up delay-300 mt-8 flex flex-wrap gap-3">
               <Link href="/signup?role=coordinator">
                 <Button size="lg" className="shadow-md shadow-brand/20">
-                  I run an NGO <ArrowRight className="h-4 w-4" />
+                  {t("I run an NGO")} <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link href="/signup?role=volunteer">
                 <Button size="lg" variant="outline">
-                  I want to volunteer
+                  {t("I want to volunteer")}
                 </Button>
               </Link>
             </div>
@@ -125,7 +165,7 @@ export default function Landing() {
               {STATS.map((s) => (
                 <div key={s.l}>
                   <div className="text-3xl font-bold text-gradient">{s.v}</div>
-                  <div className="text-sm text-slate-500 mt-0.5">{s.l}</div>
+                  <div className="text-sm text-slate-500 mt-0.5">{t(s.l)}</div>
                 </div>
               ))}
             </div>
@@ -135,7 +175,7 @@ export default function Landing() {
         {/* Trusted by */}
         <div className="bg-slate-50 border-y border-slate-100 py-5">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 flex flex-wrap items-center gap-x-8 gap-y-2">
-            <span className="text-xs font-medium text-slate-400 uppercase tracking-wide shrink-0">Trusted by NGOs across India</span>
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-wide shrink-0">{t("Trusted by NGOs across India")}</span>
             {["Sahyog Foundation", "AidBridge", "HelpFirst India", "CommunityServe", "ReliefNet"].map((n) => (
               <span key={n} className="text-sm font-medium text-slate-400">{n}</span>
             ))}
@@ -146,10 +186,10 @@ export default function Landing() {
         <section className="bg-white py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="text-center max-w-2xl mx-auto mb-12">
-              <div className="text-xs font-semibold uppercase tracking-widest text-brand mb-2">Platform</div>
-              <h2 className="text-3xl font-bold text-slate-900">Everything your NGO needs, built in</h2>
+              <div className="text-xs font-semibold uppercase tracking-widest text-brand mb-2">{t("Platform")}</div>
+              <h2 className="text-3xl font-bold text-slate-900">{t("Everything your NGO needs, built in")}</h2>
               <p className="mt-3 text-slate-500 text-sm">
-                One platform covering intake, matching, coordination, and verification — no duct tape required.
+                {t("One platform covering intake, matching, coordination, and verification — no duct tape required.")}
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
@@ -306,13 +346,13 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-2 select-none">
-              <div className="h-7 w-7 rounded-md bg-gradient-to-br from-brand to-violet-600 text-white grid place-items-center text-xs font-bold">S</div>
+              <img src="/samaajsetu.webp" alt="Logo" className="h-7 w-7 object-contain" />
               <span className="text-white font-medium">SamaajSetu</span>
             </Link>
             <div className="text-xs">
               Next.js · Supabase · ChromaDB · Gemini via OpenRouter · LlamaParse · Leaflet/OSM
             </div>
-            <div className="text-xs">© 2024 SamaajSetu. All rights reserved.</div>
+            <div className="text-xs">© 2026 SamaajSetu. All rights reserved.</div>
           </div>
         </div>
       </footer>

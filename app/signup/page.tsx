@@ -74,7 +74,7 @@ function SignupInner() {
       {/* Left decorative panel */}
       <div className="hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-violet-600 via-brand to-brand-500">
         <Link href="/" className="flex items-center gap-2.5 select-none">
-          <div className="h-8 w-8 rounded-lg bg-white/20 text-white grid place-items-center font-bold text-sm">S</div>
+          <img src="/samaajsetu.webp" alt="Logo" className="h-8 w-8 object-contain" />
           <span className="text-white font-semibold text-lg">SamaajSetu</span>
         </Link>
 
@@ -96,7 +96,7 @@ function SignupInner() {
           </div>
         </div>
 
-        <p className="text-white/30 text-xs">© 2024 SamaajSetu</p>
+        <p className="text-white/30 text-xs">© 2026 SamaajSetu</p>
       </div>
 
       {/* Right form panel */}

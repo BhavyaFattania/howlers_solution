@@ -3,11 +3,13 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowRight, Building2, HeartHandshake, CheckCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Building2, HeartHandshake, CheckCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 
 type PortalRole = "coordinator" | "volunteer";
 
@@ -58,6 +60,7 @@ export default function LoginPage() {
 function LoginInner() {
   const router  = useRouter();
   const params  = useSearchParams();
+  const { t } = useTranslation();
   const [portal, setPortal]   = useState<PortalRole>(
     params.get("role") === "volunteer" ? "volunteer" : "coordinator"
   );
@@ -104,7 +107,7 @@ function LoginInner() {
           : "bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700"
       )}>
         <Link href="/" className="flex items-center gap-2.5 select-none">
-          <div className="h-8 w-8 rounded-lg bg-white/20 text-white grid place-items-center font-bold text-sm">S</div>
+          <img src="/samaajsetu.webp" alt="Logo" className="h-8 w-8 object-contain" />
           <span className="text-white font-semibold text-lg">SamaajSetu</span>
         </Link>
 
@@ -114,7 +117,7 @@ function LoginInner() {
             portal === "coordinator" ? "bg-white/15 text-white" : "bg-white/15 text-white"
           )}>
             {portal === "coordinator" ? <Building2 className="h-3.5 w-3.5" /> : <HeartHandshake className="h-3.5 w-3.5" />}
-            {portal === "coordinator" ? "NGO Coordinator Portal" : "Volunteer Portal"}
+            {portal === "coordinator" ? t("NGO Coordinator Portal") : t("Volunteer Portal")}
           </div>
           <h2 className="text-3xl font-bold text-white leading-snug mb-4 whitespace-pre-line">
             {panel.headline}
@@ -129,7 +132,7 @@ function LoginInner() {
           </ul>
         </div>
 
-        <p className="text-white/30 text-xs">© 2024 SamaajSetu</p>
+        <p className="text-white/30 text-xs">© 2026 SamaajSetu</p>
       </div>
 
       {/* Right form panel */}
@@ -141,9 +144,13 @@ function LoginInner() {
             <span className="font-semibold text-slate-900">SamaajSetu</span>
           </Link>
 
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
+            <ArrowLeft className="h-4 w-4" /> {t("Back to Home")}
+          </Link>
+
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
-            <p className="text-sm text-slate-500 mt-1">Sign in to your SamaajSetu account</p>
+            <h1 className="text-2xl font-bold text-slate-900">{t("Welcome back")}</h1>
+            <p className="text-sm text-slate-500 mt-1">{t("Sign in to your SamaajSetu account")}</p>
           </div>
 
           {/* Portal selector */}
@@ -176,7 +183,7 @@ function LoginInner() {
                       ? p.value === "coordinator" ? "text-brand-700" : "text-emerald-700"
                       : "text-slate-700"
                   )}>
-                    {p.label}
+                    {t(p.label as any) || p.label}
                   </span>
                   <span className="text-[11px] text-slate-400 leading-tight">{p.sub}</span>
                 </button>
@@ -186,7 +193,7 @@ function LoginInner() {
 
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <Label>Email address</Label>
+              <Label>{t("Email address")}</Label>
               <Input
                 type="email"
                 required
@@ -196,7 +203,7 @@ function LoginInner() {
               />
             </div>
             <div>
-              <Label>Password</Label>
+              <Label>{t("Password")}</Label>
               <Input
                 type="password"
                 required
@@ -214,9 +221,9 @@ function LoginInner() {
               )}
               disabled={busy}
             >
-              {busy ? "Signing in…" : (
+              {busy ? t("Signing in…") : (
                 <>
-                  Sign in as {portal === "coordinator" ? "NGO Coordinator" : "Volunteer"}
+                  {t("Sign in as")} {portal === "coordinator" ? t("NGO Coordinator Portal").split(" ")[0] : t("Volunteer Portal").split(" ")[0]}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -228,13 +235,13 @@ function LoginInner() {
               <div className="w-full border-t border-slate-200" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-white px-2 text-slate-400">New to SamaajSetu?</span>
+              <span className="bg-white px-2 text-slate-400">{t("New to SamaajSetu?")}</span>
             </div>
           </div>
 
           <Link href={`/signup?role=${portal}`}>
             <Button variant="outline" className="w-full">
-              Create a {portal === "coordinator" ? "coordinator" : "volunteer"} account
+              {t("Create a")} {portal === "coordinator" ? "coordinator" : "volunteer"} {t("account")}
             </Button>
           </Link>
         </div>

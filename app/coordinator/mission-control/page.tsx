@@ -8,6 +8,8 @@ import { Card, CardBody, CardHeader, CardTitle, KpiTile, Badge, Empty } from "@/
 import { fmtRelative } from "@/lib/utils";
 import type { Need } from "@/lib/types";
 import { Siren, AlertTriangle, Database, Activity } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 
 const MissionMap = dynamic(
   () => import("@/components/map/MissionMap").then((m) => m.MissionMap),
@@ -63,6 +65,7 @@ const ACTIVITY_TONE: Record<string, "green" | "red" | "blue" | "amber"> = {
 };
 
 export default function MissionControl() {
+  const { t } = useTranslation();
   const [needs, setNeeds]       = useState<Need[]>(DUMMY_NEEDS);
   const [activity, setActivity] = useState<ActivityRow[]>(DUMMY_ACTIVITY);
   const [crisis, setCrisis]     = useState<{ active: boolean; geojson?: GeoJSON.GeoJsonObject; district?: string } | null>(null);
@@ -135,31 +138,32 @@ export default function MissionControl() {
   return (
     <div className={`p-6 min-h-screen ${crisis?.active ? "bg-red-50/30" : "bg-slate-50"}`}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col md:flex-row items-start justify-between mb-6 gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-xl font-bold text-slate-900">Mission Control</h1>
+            <h1 className="text-xl font-bold text-slate-900">{t("Mission Control")}</h1>
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-medium text-emerald-700">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-live-pulse" />
-              Live
+              {t("Live")}
             </span>
           </div>
           <p className="text-sm text-slate-500">
-            Live picture of community needs across your programs.
+            {t("Live picture of community needs across your programs.")}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={seed} disabled={seeding}>
-            <Database className="h-3.5 w-3.5" />
-            {seeding ? "Seeding…" : "Seed demo data"}
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="sm" onClick={seed} disabled={seeding} className="w-full sm:w-auto flex-1 sm:flex-initial justify-center">
+            <Database className="h-3.5 w-3.5 mr-1" />
+            {seeding ? t("Seeding…") : t("Seed demo data")}
           </Button>
           <Button
             variant={crisis?.active ? "danger" : "outline"}
             size="sm"
             onClick={toggleCrisis}
+            className="w-full sm:w-auto flex-1 sm:flex-initial justify-center"
           >
-            <Siren className="h-3.5 w-3.5" />
-            {crisis?.active ? "Clear Crisis" : "Declare Crisis"}
+            <Siren className="h-3.5 w-3.5 mr-1" />
+            {crisis?.active ? t("Clear Crisis") : t("Declare Crisis")}
           </Button>
         </div>
       </div>
@@ -169,7 +173,7 @@ export default function MissionControl() {
         <div className="mb-5 rounded-xl border border-red-300 bg-red-50 px-4 py-3 flex items-center gap-3 text-red-800">
           <AlertTriangle className="h-5 w-5 shrink-0" />
           <div className="text-sm">
-            <strong>Crisis Mode active</strong>
+            <strong>{t("Crisis Mode active")}</strong>
             {crisis.district ? ` — ${crisis.district}` : ""}. Match radius relaxed; all volunteers receiving banner alert.
           </div>
         </div>
@@ -177,10 +181,10 @@ export default function MissionControl() {
 
       {/* KPI tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <KpiTile label="Open Needs"     value={kpis.open}      hint="Across all programs"  accentColor="blue"   trend="up" />
-        <KpiTile label="High / Critical" value={kpis.critical}  hint="Needs urgent action"  accentColor="red"    trend="down" />
-        <KpiTile label="Logged Today"   value={kpis.today}     hint="New submissions"       accentColor="amber" />
-        <KpiTile label="Completed"       value={kpis.completed} hint="Verified & closed"     accentColor="green"  trend="up" />
+        <KpiTile label={t("Open Needs")}     value={kpis.open}      hint="Across all programs"  accentColor="blue"   trend="up" />
+        <KpiTile label={t("High / Critical")} value={kpis.critical}  hint="Needs urgent action"  accentColor="red"    trend="down" />
+        <KpiTile label={t("Logged Today")}   value={kpis.today}     hint="New submissions"       accentColor="amber" />
+        <KpiTile label={t("Completed")}       value={kpis.completed} hint="Verified & closed"     accentColor="green"  trend="up" />
       </div>
 
       {/* Map + Activity */}
@@ -188,8 +192,8 @@ export default function MissionControl() {
         <div className="lg:col-span-2">
           <Card className="overflow-hidden">
             <CardHeader className="flex items-center justify-between">
-              <CardTitle>Urgent Needs Heatmap</CardTitle>
-              <span className="text-xs text-slate-400">{needs.length} total needs</span>
+              <CardTitle>{t("Urgent Needs Heatmap")}</CardTitle>
+              <span className="text-xs text-slate-400">{needs.length} {t("total needs")}</span>
             </CardHeader>
             <div className="h-[440px]">
               <MissionMap
@@ -203,11 +207,11 @@ export default function MissionControl() {
         <Card className="flex flex-col">
           <CardHeader className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-slate-400" />
-            <CardTitle>Live Activity</CardTitle>
+            <CardTitle>{t("Live Activity")}</CardTitle>
           </CardHeader>
           <CardBody className="flex-1 space-y-2.5 overflow-y-auto max-h-[440px]">
             {activity.length === 0 ? (
-              <Empty title="No activity yet" hint="Seed demo data to populate the feed." />
+              <Empty title={t("No activity yet")} hint={t("Seed demo data to populate the feed.")} />
             ) : (
               activity.map((a) => {
                 const tone = ACTIVITY_TONE[a.kind] ?? "slate";

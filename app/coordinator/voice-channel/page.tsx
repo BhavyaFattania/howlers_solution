@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardBody, CardHeader, CardTitle, Badge, Empty, Chip } from "@/components/ui/primitives";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 import { fmtRelative } from "@/lib/utils";
 
 interface Ticket {
@@ -22,8 +24,15 @@ const TONE: Record<string, "blue" | "purple" | "amber" | "slate"> = {
   other: "slate",
 };
 
+const DUMMY_TICKETS: Ticket[] = [
+  { id: "v1", message: "Hi, I just arrived at Sector 14 but the trucks haven't reached here yet. Should I wait?", classification: "transactional", sentiment: -0.1, themes: ["logistics", "delay"], reply: "Please coordinate with the local supervisor. The trucks are 15 minutes away.", resolved: true, created_at: new Date(Date.now() - 3600000).toISOString() },
+  { id: "v2", message: "The community here is very grateful for the medical camp. It feels great to help out!", classification: "value_based", sentiment: 0.9, themes: ["gratitude", "morale"], reply: null, resolved: true, created_at: new Date(Date.now() - 7200000).toISOString() },
+  { id: "v3", message: "Is there any training provided before we start the tutoring sessions?", classification: "relational", sentiment: 0.2, themes: ["training", "guidance"], reply: "Yes! There will be a 1-hour orientation tomorrow morning.", resolved: true, created_at: new Date(Date.now() - 86400000).toISOString() },
+];
+
 export default function VoiceChannelPage() {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const { t } = useTranslation();
+  const [tickets, setTickets] = useState<Ticket[]>(DUMMY_TICKETS);
   const [filter, setFilter] = useState<"all" | "relational" | "value_based" | "transactional">("all");
 
   useEffect(() => {
@@ -31,7 +40,9 @@ export default function VoiceChannelPage() {
     async function load() {
       const { data } = await supa
         .from("voice_tickets").select("*").order("created_at", { ascending: false });
-      setTickets((data as Ticket[]) ?? []);
+      if (data && data.length > 0) {
+        setTickets(data as Ticket[]);
+      }
     }
     load();
     const ch = supa
@@ -46,26 +57,26 @@ export default function VoiceChannelPage() {
   return (
     <div className="p-6 space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Voice Channel</h1>
+        <h1 className="text-2xl font-semibold">{t("Voice Channel")}</h1>
         <p className="text-sm text-slate-500">
-          Volunteer concerns, classified by Gemini into relational / value / transactional themes.
+          {t("Volunteer concerns, classified by Gemini into relational / value / transactional themes.")}
         </p>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(["all", "relational", "value_based", "transactional"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`h-8 px-3 rounded-md text-sm capitalize ${
+            className={`h-8 px-3 rounded-md text-sm capitalize whitespace-nowrap ${
               filter === f ? "bg-brand text-white" : "bg-white border border-slate-300"
             }`}
           >
-            {f.replace("_", " ")}
+            {t(f.replace("_", " "))}
           </button>
         ))}
       </div>
       {list.length === 0 ? (
-        <Empty title="No concerns yet" hint="Volunteers can raise concerns from the Voice tab." />
+        <Empty title={t("No concerns yet")} hint={t("Volunteers can raise concerns from the Voice tab.")} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {list.map((t) => (

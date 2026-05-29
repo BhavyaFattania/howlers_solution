@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MapPin, User, Languages, Crosshair, Plus, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle, Input, Label, Chip } from "@/components/ui/primitives";
 
@@ -39,6 +41,7 @@ function Avatar({ name }: { name: string }) {
 }
 
 export default function VolunteerProfilePage() {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [form, setForm] = useState<ProfileForm>({
@@ -132,15 +135,15 @@ export default function VolunteerProfilePage() {
           <Avatar name={form.display_name} />
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-slate-900 text-lg truncate">
-              {form.display_name || "Your name"}
+              {form.display_name || t("Your name")}
             </div>
-            <div className="text-sm text-slate-500">Volunteer</div>
+            <div className="text-sm text-slate-500">{t("Volunteer")}</div>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {form.skills.slice(0, 4).map((s) => (
                 <Chip key={s}>{s}</Chip>
               ))}
               {form.skills.length > 4 && (
-                <Chip>+{form.skills.length - 4} more</Chip>
+                <Chip>+{form.skills.length - 4} {t("more")}</Chip>
               )}
             </div>
           </div>
@@ -151,15 +154,15 @@ export default function VolunteerProfilePage() {
       <Card>
         <CardHeader className="flex items-center gap-2">
           <User className="h-4 w-4 text-slate-400" />
-          <CardTitle className="text-sm">Identity</CardTitle>
+          <CardTitle className="text-sm">{t("Identity")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-3">
           <div>
-            <Label>Display name</Label>
+            <Label>{t("Display name")}</Label>
             <Input
               value={form.display_name}
               onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-              placeholder="Priya Mehta"
+              placeholder={t("Priya Mehta")}
             />
           </div>
         </CardBody>
@@ -169,7 +172,7 @@ export default function VolunteerProfilePage() {
       <Card>
         <CardHeader className="flex items-center gap-2">
           <span className="text-base">🛠</span>
-          <CardTitle className="text-sm">Skills</CardTitle>
+          <CardTitle className="text-sm">{t("Skills")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-3">
           <div className="flex flex-wrap gap-1.5 min-h-[2rem]">
@@ -177,7 +180,7 @@ export default function VolunteerProfilePage() {
               <Chip key={s} onRemove={() => removeSkill(s)}>{s}</Chip>
             ))}
             {form.skills.length === 0 && (
-              <span className="text-xs text-slate-400">No skills added yet</span>
+              <span className="text-xs text-slate-400">{t("No skills added yet")}</span>
             )}
           </div>
           <div className="flex gap-2">
@@ -185,14 +188,14 @@ export default function VolunteerProfilePage() {
               value={skillInput}
               onChange={(e) => setSkillInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
-              placeholder="e.g. first_aid, tutoring, driving…"
+              placeholder={t("e.g. first_aid, tutoring, driving…")}
               className="flex-1"
             />
             <Button variant="outline" size="sm" onClick={addSkill} type="button">
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-xs text-slate-400">Press Enter or click + to add a skill tag</p>
+          <p className="text-xs text-slate-400">{t("Press Enter or click + to add a skill tag")}</p>
         </CardBody>
       </Card>
 
@@ -200,7 +203,7 @@ export default function VolunteerProfilePage() {
       <Card>
         <CardHeader className="flex items-center gap-2">
           <Languages className="h-4 w-4 text-slate-400" />
-          <CardTitle className="text-sm">Languages</CardTitle>
+          <CardTitle className="text-sm">{t("Languages")}</CardTitle>
         </CardHeader>
         <CardBody>
           <div className="flex flex-wrap gap-2">
@@ -215,7 +218,7 @@ export default function VolunteerProfilePage() {
                     : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                 }`}
               >
-                {l.label}
+                {t(l.label)}
               </button>
             ))}
           </div>
@@ -226,12 +229,12 @@ export default function VolunteerProfilePage() {
       <Card>
         <CardHeader className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-slate-400" />
-          <CardTitle className="text-sm">Location & Radius</CardTitle>
+          <CardTitle className="text-sm">{t("Location & Radius")}</CardTitle>
         </CardHeader>
         <CardBody className="space-y-3">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <Label>Latitude</Label>
+              <Label>{t("Latitude")}</Label>
               <Input
                 value={form.home_lat}
                 onChange={(e) => setForm({ ...form, home_lat: e.target.value })}
@@ -239,7 +242,7 @@ export default function VolunteerProfilePage() {
               />
             </div>
             <div>
-              <Label>Longitude</Label>
+              <Label>{t("Longitude")}</Label>
               <Input
                 value={form.home_lng}
                 onChange={(e) => setForm({ ...form, home_lng: e.target.value })}
@@ -247,7 +250,7 @@ export default function VolunteerProfilePage() {
               />
             </div>
             <div>
-              <Label>Radius (km)</Label>
+              <Label>{t("Radius (km)")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -259,15 +262,15 @@ export default function VolunteerProfilePage() {
           </div>
           <Button variant="outline" size="sm" onClick={useMyLocation}>
             <Crosshair className="h-4 w-4" />
-            Use my current location
+            {t("Use my current location")}
           </Button>
         </CardBody>
       </Card>
 
       {/* Save */}
       <div className="flex justify-end">
-        <Button onClick={save} disabled={busy} className="shadow-sm shadow-brand/20">
-          {busy ? "Saving…" : "Save profile"}
+        <Button onClick={save} disabled={busy} className="w-full sm:w-auto shadow-sm shadow-brand/20">
+          {busy ? t("Saving…") : t("Save profile")}
         </Button>
       </div>
     </div>

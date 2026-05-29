@@ -86,6 +86,38 @@ const SAMPLE_NEEDS = [
     geo_lat: 23.03, geo_lng: 72.59,
     headcount_required: 1,
   },
+  {
+    title: "Rebuild community library roof",
+    description: "The recent storm damaged the local library. Need physical labor and carpentry skills.",
+    category: "construction", urgency: "medium",
+    required_skills: ["carpentry", "lifting"], languages_helpful: ["hi", "gu"],
+    geo_lat: 23.015, geo_lng: 72.585,
+    headcount_required: 4,
+  },
+  {
+    title: "Emergency blood donation camp",
+    description: "Urgent O-negative and B-positive blood needed for hospital reserves.",
+    category: "health", urgency: "critical",
+    required_skills: ["first_aid", "medical"], languages_helpful: ["en", "hi"],
+    geo_lat: 23.042, geo_lng: 72.61,
+    headcount_required: 15,
+  },
+  {
+    title: "Legal rights awareness workshop",
+    description: "Lawyers or law students needed to educate local workers on their labor rights.",
+    category: "legal", urgency: "medium",
+    required_skills: ["legal", "public_speaking"], languages_helpful: ["gu"],
+    geo_lat: 23.05, geo_lng: 72.54,
+    headcount_required: 2,
+  },
+  {
+    title: "Animal rescue after flooding",
+    description: "Need volunteers with vehicles to transport stranded street dogs to the shelter.",
+    category: "animal_welfare", urgency: "high",
+    required_skills: ["driving", "animal_handling"], languages_helpful: ["gu"],
+    geo_lat: 23.02, geo_lng: 72.56,
+    headcount_required: 3,
+  },
 ];
 
 const FAKE_VOLUNTEERS = [
@@ -101,9 +133,18 @@ const FAKE_VOLUNTEERS = [
   { name: "Devika N.", skills: ["first_aid","empathy"], langs: ["gu","en"], lat: 23.035, lng: 72.605 },
   { name: "Hardik P.", skills: ["tech_support","web_dev"], langs: ["en"], lat: 23.03, lng: 72.59 },
   { name: "Sneha L.", skills: ["empathy","translation"], langs: ["mr","gu"], lat: 23.04, lng: 72.59 },
+  { name: "Arjun V.", skills: ["carpentry","lifting"], langs: ["gu","hi"], lat: 23.015, lng: 72.58 },
+  { name: "Dr. Meera K.", skills: ["medical","first_aid"], langs: ["en","hi"], lat: 23.04, lng: 72.62 },
+  { name: "Rajesh S.", skills: ["driving","animal_handling"], langs: ["gu"], lat: 23.02, lng: 72.55 },
+  { name: "Ananya B.", skills: ["legal","public_speaking"], langs: ["gu","en"], lat: 23.045, lng: 72.53 },
+  { name: "Tariq M.", skills: ["logistics","heavy_lifting"], langs: ["hi","mr"], lat: 23.025, lng: 72.57 },
 ];
 
 export async function POST() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Method not allowed in production" }, { status: 403 });
+  }
+
   const admin = createAdmin();
   await ensureCollections();
 
@@ -123,24 +164,25 @@ export async function POST() {
     .from("profiles").select("id").eq("tenant_id", TENANT).eq("role", "volunteer");
 
   if (!anyVols || anyVols.length < 5) {
-    // create fake profiles (no auth user — used purely for matcher demo data)
-    const fakeRows = FAKE_VOLUNTEERS.map((v, i) => ({
-      // deterministic uuid v4-ish
-      id: `aaaaaaaa-bbbb-cccc-dddd-${(100000000000 + i).toString().padStart(12, "0")}`,
-      tenant_id: TENANT,
-      email: `${v.name.toLowerCase().replace(/[^a-z]/g, "")}@demo.local`,
-      display_name: v.name,
-      role: "volunteer",
-      languages: v.langs,
-      skills: v.skills.map((tag) => ({ tag })),
-      home_lat: v.lat, home_lng: v.lng, max_radius_km: 10, trust_score: 0.7,
-    }));
-    // Direct insert allowed for service role; FK on auth.users will fail though
-    // because these aren't auth users. For MVP demo we drop the FK requirement
-    // by inserting via SQL with on_conflict ignore. If FK blocks, swallow.
-    for (const r of fakeRows) {
-      const { error } = await admin.from("profiles").upsert(r, { onConflict: "id" });
-      if (error) console.warn("profile insert", r.display_name, error.message);
+    for (const v of FAKE_VOLUNTEERS) {
+      const email = `${v.name.toLowerCase().replace(/[^a-z]/g, "")}@demo.local`;
+      const { data, error } = await admin.auth.admin.createUser({
+        email,
+        password: "password123",
+        email_confirm: true,
+        user_metadata: {
+          display_name: v.name,
+          role: "volunteer",
+          tenant_id: TENANT,
+        },
+      });
+      if (data?.user) {
+        await admin.from("profiles").update({
+          languages: v.langs,
+          skills: v.skills.map((tag) => ({ tag })),
+          home_lat: v.lat, home_lng: v.lng, max_radius_km: 10, trust_score: 0.7,
+        }).eq("id", data.user.id);
+      }
     }
   }
 
@@ -160,8 +202,8 @@ export async function POST() {
         }),
         metadata: {
           tenant_id: v.tenant_id,
-          home_lat: v.home_lat ?? 0,
-          home_lng: v.home_lng ?? 0,
+          ...(v.home_lat != null && { home_lat: v.home_lat }),
+          ...(v.home_lng != null && { home_lng: v.home_lng }),
           radius_km: v.max_radius_km ?? 8,
         },
       });
@@ -174,8 +216,13 @@ export async function POST() {
   const { data: existingNeeds } = await admin
     .from("needs").select("id,title").eq("tenant_id", TENANT);
   const existingTitles = new Set((existingNeeds ?? []).map((n) => n.title));
-  const toInsert = SAMPLE_NEEDS.filter((n) => !existingTitles.has(n.title)).map((n) => ({
-    ...n, tenant_id: TENANT, state: "published" as const,
+  
+  const TRIAGE_STATES = ["submitted", "triaged", "published", "matched", "in_progress", "verified"];
+  
+  const toInsert = SAMPLE_NEEDS.filter((n) => !existingTitles.has(n.title)).map((n, i) => ({
+    ...n, 
+    tenant_id: TENANT, 
+    state: TRIAGE_STATES[i % TRIAGE_STATES.length],
     window_start: new Date(Date.now() + 86400000).toISOString(),
     window_end: new Date(Date.now() + 86400000 * 3).toISOString(),
   }));
@@ -188,7 +235,8 @@ export async function POST() {
           document: needDocText(n),
           metadata: {
             tenant_id: n.tenant_id, urgency: n.urgency, state: n.state,
-            geo_lat: n.geo_lat ?? 0, geo_lng: n.geo_lng ?? 0,
+            ...(n.geo_lat != null && { geo_lat: n.geo_lat }),
+            ...(n.geo_lng != null && { geo_lng: n.geo_lng }),
           },
         });
       } catch (e) {
@@ -199,13 +247,24 @@ export async function POST() {
 
   // Re-index all needs (in case of partial state)
   const { data: allNeeds } = await admin.from("needs").select("*").eq("tenant_id", TENANT);
+  
+  // Force existing needs to spread across all columns for a realistic Triage board
+  for (let i = 0; i < (allNeeds?.length || 0); i++) {
+    const newState = TRIAGE_STATES[i % TRIAGE_STATES.length];
+    if (allNeeds![i].state !== newState) {
+      await admin.from("needs").update({ state: newState }).eq("id", allNeeds![i].id);
+      allNeeds![i].state = newState;
+    }
+  }
+
   for (const n of allNeeds ?? []) {
     try {
       await upsertNeed({
         id: n.id, document: needDocText(n),
         metadata: {
           tenant_id: n.tenant_id, urgency: n.urgency, state: n.state,
-          geo_lat: n.geo_lat ?? 0, geo_lng: n.geo_lng ?? 0,
+          ...(n.geo_lat != null && { geo_lat: n.geo_lat }),
+          ...(n.geo_lng != null && { geo_lng: n.geo_lng }),
         },
       });
     } catch {}

@@ -171,9 +171,15 @@ create policy "profiles update own" on profiles for update
 
 -- Generic per-tenant policies
 drop policy if exists "needs tenant" on needs;
-create policy "needs tenant" on needs for all
-  using (tenant_id = public.current_tenant())
-  with check (tenant_id = public.current_tenant());
+drop policy if exists "needs read tenant" on needs;
+drop policy if exists "needs modify tenant" on needs;
+
+create policy "needs read tenant" on needs for select
+  using (tenant_id = public.current_tenant());
+
+create policy "needs modify tenant" on needs for all
+  using (tenant_id = public.current_tenant() and exists (select 1 from profiles where id = auth.uid() and role in ('coordinator', 'admin')))
+  with check (tenant_id = public.current_tenant() and exists (select 1 from profiles where id = auth.uid() and role in ('coordinator', 'admin')));
 
 drop policy if exists "programs tenant" on programs;
 create policy "programs tenant" on programs for all

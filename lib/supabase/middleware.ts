@@ -10,11 +10,10 @@ export async function updateSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // If env vars are missing (e.g. misconfigured deployment), don't crash the
-  // middleware — just pass the request through unauthenticated.
+  // If env vars are missing (e.g. misconfigured deployment), fail closed.
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn("[middleware] Supabase env vars missing — skipping auth check");
-    return response;
+    console.error("[middleware] CRITICAL: Supabase environment configuration is missing.");
+    return new NextResponse("Internal Server Error: Missing Configuration", { status: 500 });
   }
 
   const supabase = createServerClient(

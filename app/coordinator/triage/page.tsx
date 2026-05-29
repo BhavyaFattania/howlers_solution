@@ -8,6 +8,8 @@ import { Card, CardBody, Badge } from "@/components/ui/primitives";
 import type { Need, NeedState } from "@/lib/types";
 import { fmtRelative, URGENCY_COLOR } from "@/lib/utils";
 import { ArrowRight, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 
 const COLUMNS: { id: NeedState; title: string; color: string }[] = [
   { id: "submitted",   title: "Submitted",   color: "bg-slate-100  border-slate-200" },
@@ -35,6 +37,7 @@ const DUMMY_NEEDS: Need[] = [
 ] as Need[];
 
 export default function TriagePage() {
+  const { t } = useTranslation();
   const [needs, setNeeds] = useState<Need[]>(DUMMY_NEEDS);
 
   async function load() {
@@ -65,26 +68,26 @@ export default function TriagePage() {
 
   return (
     <div className="p-6 bg-slate-50 min-h-screen">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Triage Inbox</h1>
-          <p className="text-sm text-slate-500">Advance each need's state as you handle it.</p>
+          <h1 className="text-xl font-bold text-slate-900">{t("Triage Inbox")}</h1>
+          <p className="text-sm text-slate-500">{t("Advance each need's state as you handle it.")}</p>
         </div>
-        <Link href="/coordinator/needs/new">
-          <Button size="sm">
-            <Plus className="h-3.5 w-3.5" /> New Need
+        <Link href="/coordinator/needs/new" className="w-full sm:w-auto">
+          <Button size="sm" className="w-full sm:w-auto">
+            <Plus className="h-3.5 w-3.5" /> {t("New Need")}
           </Button>
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
         {COLUMNS.map((col) => {
           const items = needs.filter((n) => n.state === col.id);
           return (
             <div key={col.id} className={`rounded-xl border ${col.color} p-2 min-h-[70vh]`}>
               <div className="flex items-center justify-between mb-2 px-1">
                 <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  {col.title}
+                  {t(col.title)}
                 </span>
                 <span className="text-xs font-bold text-slate-400 bg-white rounded-full h-5 w-5 grid place-items-center border border-slate-200">
                   {items.length}
@@ -93,7 +96,7 @@ export default function TriagePage() {
               <div className="space-y-2">
                 {items.length === 0 ? (
                   <div className="text-xs text-slate-400 text-center py-6 rounded-lg border border-dashed border-slate-200">
-                    Empty
+                    {t("Empty")}
                   </div>
                 ) : (
                   items.map((n) => <NeedCard key={n.id} need={n} onMove={move} />)
@@ -108,6 +111,7 @@ export default function TriagePage() {
 }
 
 function NeedCard({ need, onMove }: { need: Need; onMove: (n: Need, to: NeedState) => void }) {
+  const { t } = useTranslation();
   const idx  = COLUMNS.findIndex((c) => c.id === need.state);
   const next = COLUMNS[idx + 1];
 
@@ -134,13 +138,13 @@ function NeedCard({ need, onMove }: { need: Need; onMove: (n: Need, to: NeedStat
           </div>
         </div>
         <div className="flex flex-wrap gap-1 mb-2">
-          <Badge tone={urgencyTone as "red" | "amber" | "slate" | "orange"}>{need.urgency}</Badge>
-          {need.category && <Badge tone="slate">{need.category.replace("_", " ")}</Badge>}
+          <Badge tone={urgencyTone as "red" | "amber" | "slate" | "orange"}>{t(need.urgency)}</Badge>
+          {need.category && <Badge tone="slate">{t(need.category.replace("_", " "))}</Badge>}
         </div>
         <div className="text-[11px] text-slate-400 mb-2">{fmtRelative(need.created_at)}</div>
         {next && (
           <Button size="sm" variant="outline" className="w-full text-xs h-7" onClick={() => onMove(need, next.id)}>
-            {next.title} <ArrowRight className="h-3 w-3" />
+            {t(next.title)} <ArrowRight className="h-3 w-3" />
           </Button>
         )}
       </CardBody>

@@ -4,6 +4,20 @@ import { redactPII } from "@/lib/pii";
 import { chatJSON } from "@/lib/llm";
 import type { ExtractedNeedDraft } from "@/lib/types";
 
+const uploadCounts = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = uploadCounts.get(ip);
+  if (!record || record.resetTime < now) {
+    uploadCounts.set(ip, { count: 1, resetTime: now + 60000 });
+    return true;
+  }
+  if (record.count >= 5) return false;
+  record.count++;
+  return true;
+}
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -21,10 +35,20 @@ Return ONLY JSON matching this TypeScript shape:
 }`;
 
 export async function POST(req: Request) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof Blob))
     return NextResponse.json({ error: "file required" }, { status: 400 });
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json({ error: "File exceeds limits" }, { status: 400 });
+  }
 
   let markdown: string;
   try {

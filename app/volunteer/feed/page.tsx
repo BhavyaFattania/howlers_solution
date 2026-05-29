@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle, Badge, Chip, Empty } from "@/components/ui/primitives";
 import type { RankedNeed } from "@/lib/types";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18n";
 
 const DUMMY_RANKED: RankedNeed[] = [
   {
@@ -71,6 +73,7 @@ export default function VolunteerFeedPage() {
   const [ranked, setRanked] = useState<RankedNeed[]>(DUMMY_RANKED);
   const [busy, setBusy]     = useState(false);
   const [crisis, setCrisis] = useState<{ active: boolean; district?: string } | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const supa = createClient();
@@ -103,10 +106,12 @@ export default function VolunteerFeedPage() {
   }
 
   async function accept(needId: string, reason: string) {
+    // Optimistically remove from UI
+    setRanked((prev) => prev.filter((n) => n.id !== needId));
     const r = await fetch("/api/assignments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ needId, asVolunteer: true, reason }),
+      body: JSON.stringify({ needId, asVolunteer: true, reason, action: "accept" }),
     });
     if (r.ok) {
       toast.success("Thanks for stepping up! Check My Tasks to proceed.");
@@ -116,19 +121,34 @@ export default function VolunteerFeedPage() {
     }
   }
 
+  async function reject(needId: string) {
+    // Optimistically remove from UI
+    setRanked((prev) => prev.filter((n) => n.id !== needId));
+    const r = await fetch("/api/assignments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ needId, asVolunteer: true, reason: "declined via feed", action: "reject" }),
+    });
+    if (r.ok) {
+      toast("Task dismissed from your feed.");
+    } else {
+      toast.error("Error dismissing task");
+    }
+  }
+
   return (
     <div className="p-6 max-w-2xl mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Your matches today</h1>
+          <h1 className="text-xl font-bold text-slate-900">{t("Your matches today")}</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Ranked by Gemini for your skills, language, and location.
+            {t("Ranked by Gemini for your skills, language, and location.")}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh} disabled={busy}>
-          <Sparkles className="h-3.5 w-3.5" />
-          {busy ? "Refreshing…" : "Refresh"}
+        <Button variant="outline" size="sm" onClick={refresh} disabled={busy} className="w-full sm:w-auto flex items-center justify-center shrink-0">
+          <Sparkles className="h-3.5 w-3.5 mr-1" />
+          {busy ? t("Refreshing…") : t("Refresh")}
         </Button>
       </div>
 
@@ -144,7 +164,7 @@ export default function VolunteerFeedPage() {
 
       {ranked.length === 0 && !busy ? (
         <Empty
-          title="No matches yet"
+          title={t("No matches yet")}
           hint="Update your profile with skills and location, or ask a coordinator to seed demo data."
           icon={<Sparkles className="h-8 w-8" />}
         />
@@ -163,7 +183,7 @@ export default function VolunteerFeedPage() {
                     </span>
                     <CardTitle className="text-base leading-snug">{n.title}</CardTitle>
                   </div>
-                  <Badge tone={URGENCY_TONE[n.urgency]}>{n.urgency}</Badge>
+                  <Badge tone={URGENCY_TONE[n.urgency]}>{t(n.urgency)}</Badge>
                 </div>
               </CardHeader>
 
@@ -177,7 +197,7 @@ export default function VolunteerFeedPage() {
                 {/* Match score */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-slate-500 font-medium">Match score</span>
+                    <span className="text-xs text-slate-500 font-medium">{t("Match score")}</span>
                   </div>
                   <ScoreBar score={n.score} />
                 </div>
@@ -195,9 +215,14 @@ export default function VolunteerFeedPage() {
                   ))}
                 </div>
 
-                <Button className="w-full" size="sm" onClick={() => accept(n.id, n.reason)}>
-                  <Clock className="h-3.5 w-3.5" /> I'll help with this
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="w-1/3 text-slate-500" size="sm" onClick={() => reject(n.id)}>
+                    {t("Pass")}
+                  </Button>
+                  <Button className="w-2/3" size="sm" onClick={() => accept(n.id, n.reason)}>
+                    <Clock className="h-3.5 w-3.5" /> {t("I'll help")}
+                  </Button>
+                </div>
               </CardBody>
             </Card>
           ))}
